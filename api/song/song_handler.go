@@ -37,8 +37,18 @@ func GetSongByID(w http.ResponseWriter, r *http.Request) {
 func CreateSong(w http.ResponseWriter, r *http.Request) {
 	var newSong models.Song
 
-	if err := json.NewDecoder(r.Body).Decode(&newSong); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	// Create a new JSON decoder and disallow unknown fields
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&newSong); err != nil {
+		http.Error(w, "Invalid JSON format or extra fields", http.StatusBadRequest)
+		return
+	}
+
+	// Validate required fields
+	if newSong.Title == "" || newSong.Artist == "" || newSong.Genre == "" {
+		http.Error(w, "Missing required fields: title, artist, or genre", http.StatusBadRequest)
 		return
 	}
 
@@ -49,7 +59,24 @@ func CreateSong(w http.ResponseWriter, r *http.Request) {
 func UpdateSong(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	var updatedSong models.Song
-	_ = json.NewDecoder(r.Body).Decode(&updatedSong)
+
+	// Create a new JSON decoder and disallow unknown fields
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	// Decode the incoming JSON request
+	if err := decoder.Decode(&updatedSong); err != nil {
+		http.Error(w, "Invalid JSON format or extra fields", http.StatusBadRequest)
+		return
+	}
+
+	// Validate required fields
+	if updatedSong.Title == "" || updatedSong.Artist == "" || updatedSong.Genre == "" {
+		http.Error(w, "Missing required fields: title, artist, or genre", http.StatusBadRequest)
+		return
+	}
+
+	//Update the song in the service layer
 	song, err := services.UpdateSong(id, updatedSong)
 	if err != nil {
 		http.Error(w, "Song not found", http.StatusNotFound)
