@@ -1,0 +1,42 @@
+name: Song service
+
+on:
+  push:
+    branches:
+      - development
+  pull_request:
+    branches:
+    - development
+
+jobs:
+  build-test-lint:
+    runs-on: ubuntu-latest
+    steps:
+    # Check out the code
+    - name: Check out the code
+      uses: actions/checkout@v3
+
+    # Setup Go
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23.1' # Specify your Go version
+
+    # Cache Go modules
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    # Install dependencies
+    - name: Install dependencies
+      run: go mod download
+
+    - name: Build the application
+      run: go build -v ./cmd/
+
+    - name: Run Unit Tests
+      run: go test -v ./... -cover
