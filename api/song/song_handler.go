@@ -96,6 +96,7 @@ func UpdateSong(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Song not found", http.StatusNotFound)
 		return
 	}
+	//test
 	//json.NewEncoder(w).Encode(song)
 
 	if err := json.NewEncoder(w).Encode(song); err != nil {
