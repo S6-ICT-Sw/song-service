@@ -35,7 +35,12 @@ func GetSongByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(song)
+	//json.NewEncoder(w).Encode(song)
+
+	if err := json.NewEncoder(w).Encode(song); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func CreateSong(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +62,12 @@ func CreateSong(w http.ResponseWriter, r *http.Request) {
 	}
 
 	createdSong := services.CreateSong(newSong)
-	json.NewEncoder(w).Encode(createdSong)
+	//json.NewEncoder(w).Encode(createdSong)
+
+	if err := json.NewEncoder(w).Encode(createdSong); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func UpdateSong(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +96,12 @@ func UpdateSong(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Song not found", http.StatusNotFound)
 		return
 	}
-	json.NewEncoder(w).Encode(song)
+	//json.NewEncoder(w).Encode(song)
+
+	if err := json.NewEncoder(w).Encode(song); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func DeleteSong(w http.ResponseWriter, r *http.Request) {
