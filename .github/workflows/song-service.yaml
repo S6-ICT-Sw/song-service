@@ -14,17 +14,17 @@ jobs:
     steps:
     # Check out the code
     - name: Check out the code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     # Setup Go
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: '1.23.1' # Specify your Go version
 
     # Cache Go modules
     - name: Cache Go modules
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/go-build
         key: go-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
