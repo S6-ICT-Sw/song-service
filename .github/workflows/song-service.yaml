@@ -9,7 +9,7 @@ on:
     - development
 
 jobs:
-  build-test-lint-docker:
+  build:
     runs-on: ubuntu-latest
     steps:
     # Check out the code
@@ -39,6 +39,13 @@ jobs:
 
     - name: Build the application
       run: go build -v ./cmd/song-service/
+      
+  test-lint-docker:
+    runs-on: ubuntu-latest
+    steps:
+    # Check out the code
+    - name: Check out the code
+      uses: actions/checkout@v4
 
     - name: Run Unit Tests
       run: go test -v ./... -cover
