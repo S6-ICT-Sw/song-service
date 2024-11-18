@@ -99,6 +99,11 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
+    - name: Monitor the project with Snyk
+      run: snyk monitor
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
   docker:
     runs-on: ubuntu-latest
     needs: [build, test, lint, snyk]
