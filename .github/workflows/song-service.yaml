@@ -76,10 +76,24 @@ jobs:
       with:
         go-version: '1.23.1'
 
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+              ~/.cache/go-build
+              ${{ runner.tool_cache }}/go
+        key: go-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+          
+    # Install dependencies
+    - name: Install dependencies
+      run: go mod download
+
     - name: Install Snyk
       run: npm install -g snyk
 
-    # Step 6: Run Snyk test
+    # Run Snyk test
     - name: Run Snyk test
       run: snyk test
       env:
