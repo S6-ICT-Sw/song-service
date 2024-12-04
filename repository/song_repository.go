@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/TonyJ3/song-service/models"
+	//"github.com/TonyJ3/song-service/db"
 )
 
 var (
