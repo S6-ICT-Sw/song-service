@@ -19,7 +19,11 @@ func RegisterRoutes(r *mux.Router) {
 }
 
 func GetSongs(w http.ResponseWriter, r *http.Request) {
-	songs := services.GetAllSongs()
+	songs, err := services.GetAllSongs()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	if err := json.NewEncoder(w).Encode(songs); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
@@ -61,7 +65,11 @@ func CreateSong(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdSong := services.CreateSong(newSong)
+	createdSong, err := services.CreateSong(newSong)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	//json.NewEncoder(w).Encode(createdSong)
 
 	if err := json.NewEncoder(w).Encode(createdSong); err != nil {
