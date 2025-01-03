@@ -4,9 +4,17 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"bytes"
+	"fmt"
+	"io"
+
+	"log"
+
 	"github.com/TonyJ3/song-service/models"
 	"github.com/TonyJ3/song-service/services"
 	"github.com/gorilla/mux"
+
+	"github.com/TonyJ3/song-service/messaging"
 )
 
 // RegisterRoutes sets up the routes for song resource
@@ -72,10 +80,54 @@ func CreateSong(w http.ResponseWriter, r *http.Request) {
 	}
 	//json.NewEncoder(w).Encode(createdSong)
 
+	// Notify the song suggestion service
+	/*err = notifySongSuggestionService(createdSong)
+	if err != nil {
+		http.Error(w, "Failed to notify song suggestion service: "+err.Error(), http.StatusInternalServerError)
+		return
+	}*/
+
+	// Publish the event to RabbitMQ
+	err = messaging.PublishMessage("created", createdSong.ID.Hex(), createdSong.Title, createdSong.Artist)
+	if err != nil {
+		http.Error(w, "Failed to publish song creation event", http.StatusInternalServerError)
+	}
+
 	if err := json.NewEncoder(w).Encode(createdSong); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
+}
+
+// Helper function to notify the song suggestion service
+func notifySongSuggestionService(song models.Song) error {
+	// Prepare the payload for the song suggestion service
+	payload := map[string]string{
+		"song_id": song.ID.Hex(), // Convert ObjectID to string
+		"title":   song.Title,
+		"artist":  song.Artist,
+	}
+
+	// Convert the payload to JSON
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	// Make an HTTP POST request to the song suggestion service
+	resp, err := http.Post("http://localhost:8081/suggestions", "application/json", bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Check the response status code
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("song suggestion service returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
 }
 
 func UpdateSong(w http.ResponseWriter, r *http.Request) {
@@ -119,5 +171,14 @@ func DeleteSong(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Song not found", http.StatusNotFound)
 		return
 	}
+
+	// Publish the delete event to RabbitMQ
+	err = messaging.PublishMessage("deleted", id, "", "")
+	if err != nil {
+		log.Printf("Failed to publish delete event for song ID %s: %v", id, err)
+		http.Error(w, "Failed to publish delete event", http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
