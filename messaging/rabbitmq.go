@@ -12,7 +12,7 @@ var channel *amqp091.Channel
 
 func InitRabbitMQ() error {
 	var err error
-	connection, err = amqp091.Dial("amqp://guest:guest@localhost:5672/")
+	connection, err = amqp091.Dial("amqp://guest:guest@localhost:5672/") //"amqp://user:password@rabbitmq:5672/"
 	if err != nil {
 		log.Printf("Failed to connect to RabbitMQ: %v", err)
 		return err
