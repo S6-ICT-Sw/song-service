@@ -58,6 +58,10 @@ func CloseRabbitMQ() {
 	}
 }
 
+func GetChannel() *amqp091.Channel {
+	return channel
+}
+
 // This is use for the integration test
 func ConsumeQueue(queueName string) (<-chan amqp091.Delivery, error) {
 	msgs, err := channel.Consume(

@@ -16,7 +16,7 @@ type Message struct {
 	Artist  string `json:"artist,omitempty"`
 }
 
-func PublishMessage(eventType, song_ID, title, artist string) error {
+func PublishMessage(channel *amqp091.Channel, eventType, song_ID, title, artist string) error {
 	if channel == nil {
 		log.Println("RabbitMQ channel is not initialized")
 		return fmt.Errorf("RabbitMQ channel is nil")

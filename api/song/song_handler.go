@@ -94,9 +94,25 @@ func CreateSong(w http.ResponseWriter, r *http.Request) {
 	}*/
 
 	// Publish the event to RabbitMQ
-	err = messaging.PublishMessage("created", createdSong.ID.Hex(), createdSong.Title, createdSong.Artist)
+	// Initialize RabbitMQ connection and channel
+	err = messaging.InitRabbitMQ()
+	if err != nil {
+		http.Error(w, "Failed to connect to RabbitMQ", http.StatusInternalServerError)
+		return
+	}
+	defer messaging.CloseRabbitMQ() // Ensure the channel and connection are closed after the function finishes
+
+	// Publish the "created" event to RabbitMQ
+	err = messaging.PublishMessage(
+		messaging.GetChannel(), // Use the channel from InitRabbitMQ
+		"created",              // eventType: "created" for a new song
+		createdSong.ID.Hex(),   // song_ID: the ID of the created song
+		createdSong.Title,      // title: the song's title
+		createdSong.Artist,     // artist: the song's artist
+	)
 	if err != nil {
 		http.Error(w, "Failed to publish song creation event", http.StatusInternalServerError)
+		return
 	}
 
 	if err := json.NewEncoder(w).Encode(createdSong); err != nil {
@@ -178,8 +194,17 @@ func DeleteSong(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Publish the event to RabbitMQ
+	// Initialize RabbitMQ connection and channel
+	err = messaging.InitRabbitMQ()
+	if err != nil {
+		http.Error(w, "Failed to connect to RabbitMQ", http.StatusInternalServerError)
+		return
+	}
+	defer messaging.CloseRabbitMQ() // Ensure the channel and connection are closed after the function finishes
+
 	// Publish the delete event to RabbitMQ
-	err = messaging.PublishMessage("deleted", id, "", "")
+	err = messaging.PublishMessage(messaging.GetChannel(), "deleted", id, "", "")
 	if err != nil {
 		log.Printf("Failed to publish delete event for song ID %s: %v", id, err)
 		http.Error(w, "Failed to publish delete event", http.StatusInternalServerError)
