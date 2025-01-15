@@ -91,7 +91,13 @@ jobs:
       run: go test -timeout 300s -run ^TestCreateSongPublishIntegration$ github.com/TonyJ3/song-service/integration_test
 
     - name: Stop background application
-      run: kill $(ps aux | grep 'go run ./cmd/song-service' | grep -v grep | awk '{print $2}')t
+      run: |
+        pid=$(pgrep -f "go run ./cmd/song-service")
+        if [ -n "$pid" ]; then
+          kill $pid
+        else
+          echo "No application process found"
+        fi
 
   lint:
     runs-on: ubuntu-latest
