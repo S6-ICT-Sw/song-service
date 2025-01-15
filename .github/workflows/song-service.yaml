@@ -75,17 +75,23 @@ jobs:
     - name: Install dependencies
       run: go mod download
 
-    - name: Run application
+    - name: Start application in the background
       env:
         RABBITMQ_URI: amqp://guest:guest@localhost:5672/
         MONGO_URI: mongodb+srv://song-snippets-admin:DQv4P9LXNBQ2xsdb@songsnippets.ci2mt.mongodb.net/?retryWrites=true&w=majority&appName=SongSnippets
-      run: go run ./cmd/song-service
+      run: nohup go run ./cmd/song-service &
+
+    - name: Wait for application to start
+      run: sleep 10
 
     - name: Run integration tests
       env:
         RABBITMQ_URI: amqp://guest:guest@localhost:5672/
         MONGO_URI: mongodb://localhost:27017/testDB
       run: go test -timeout 300s -run ^TestCreateSongPublishIntegration$ github.com/TonyJ3/song-service/integration_test
+
+    - name: Stop background application
+      run: kill $(ps aux | grep 'go run ./cmd/song-service' | grep -v grep | awk '{print $2}')t
 
   lint:
     runs-on: ubuntu-latest
