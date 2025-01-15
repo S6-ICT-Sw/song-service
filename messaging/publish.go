@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/rabbitmq/amqp091-go"
 )
@@ -39,6 +40,9 @@ func PublishMessage(eventType, song_ID, title, artist string) error {
 		return err
 	}
 
+	// Log the message before publishing
+	log.Printf("Publishing message to RabbitMQ: %s", string(body))
+
 	err = channel.Publish(
 		"",            // exchange
 		"song_events", // routing key
@@ -56,5 +60,10 @@ func PublishMessage(eventType, song_ID, title, artist string) error {
 	}
 
 	log.Println("Published message to RabbitMQ:", string(body))
+
+	//Test
+	log.Printf("RabbitMQ channel: %+v", channel)
+	log.Printf("Message to be published: %+v", message)
+	log.Printf("RabbitMQ URI from environment: %s", os.Getenv("RABBITMQ_URI"))
 	return nil
 }

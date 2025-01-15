@@ -41,7 +41,7 @@ func GetSongs(w http.ResponseWriter, r *http.Request) {
 
 func GetSongByID(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	song, err := services.GetSongByID(id)
+	song, err := services.GetSongByID(id) //services.GetSongByID(id)
 	if err != nil {
 		http.Error(w, "Song not found", http.StatusNotFound)
 		return
@@ -56,6 +56,8 @@ func GetSongByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateSong(w http.ResponseWriter, r *http.Request) {
+	//log.Println("Received request to create a song")
+
 	var newSong models.Song
 
 	// Create a new JSON decoder and disallow unknown fields
@@ -63,9 +65,11 @@ func CreateSong(w http.ResponseWriter, r *http.Request) {
 	decoder.DisallowUnknownFields()
 
 	if err := decoder.Decode(&newSong); err != nil {
+		//log.Printf("Failed to decode request body: %v", err)
 		http.Error(w, "Invalid JSON format or extra fields", http.StatusBadRequest)
 		return
 	}
+	//log.Printf("Parsed song from request: %+v", newSong)
 
 	// Validate required fields
 	if newSong.Title == "" || newSong.Artist == "" || newSong.Genre == "" {
@@ -73,11 +77,13 @@ func CreateSong(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdSong, err := services.CreateSong(newSong)
+	createdSong, err := services.CreateSong(newSong) //services.CreateSong(newSong)
 	if err != nil {
+		log.Printf("Failed to create song: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	//log.Printf("Successfully created song: %+v", createdSong)
 	//json.NewEncoder(w).Encode(createdSong)
 
 	// Notify the song suggestion service
@@ -151,7 +157,7 @@ func UpdateSong(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Update the song in the service layer
-	song, err := services.UpdateSong(id, updatedSong)
+	song, err := services.UpdateSong(id, updatedSong) //services.UpdateSong(id, updatedSong)
 	if err != nil {
 		http.Error(w, "Song not found", http.StatusNotFound)
 		return
@@ -166,7 +172,7 @@ func UpdateSong(w http.ResponseWriter, r *http.Request) {
 
 func DeleteSong(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	err := services.DeleteSong(id)
+	err := services.DeleteSong(id) //services.DeleteSong(id)
 	if err != nil {
 		http.Error(w, "Song not found", http.StatusNotFound)
 		return

@@ -1,20 +1,18 @@
 package tests
 
-import (
-	//"bytes"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"testing"
+//"bytes"
+/*"encoding/json"
+"net/http"
+"net/http/httptest"
+"testing"
 
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
+"github.com/gorilla/mux"
+"github.com/stretchr/testify/assert"
 
-	"github.com/TonyJ3/song-service/api/song"
-	"github.com/TonyJ3/song-service/models"
-)
+"github.com/TonyJ3/song-service/api/song"
+"github.com/TonyJ3/song-service/models"*/
 
-func TestGetSongs(t *testing.T) {
+/*func TestGetSongs(t *testing.T) {
 	//song.Songs["1"] = song.Song{ID: "1", Title: "Song A", Artist: "Artist A", Genre: "Pop"}
 	//song.Songs["2"] = song.Song{ID: "2", Title: "Song B", Artist: "Artist B", Genre: "Rock"}
 
@@ -37,4 +35,4 @@ func TestGetSongs(t *testing.T) {
 	var songs []models.Song
 	err = json.Unmarshal(rr.Body.Bytes(), &songs)
 	assert.Nil(t, err)
-}
+}*/

@@ -10,7 +10,7 @@ func SetupRouter() *mux.Router {
 	router := mux.NewRouter()
 
 	// Register song routes
-	song.RegisterRoutes(router)
+	song.RegisterRoutes(router) //song.RegisterRoutes(router)
 
 	return router
 }

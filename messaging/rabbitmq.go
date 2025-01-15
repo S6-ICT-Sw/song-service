@@ -1,8 +1,8 @@
 package messaging
 
 import (
-	//"fmt"
 	"log"
+	"os"
 
 	"github.com/rabbitmq/amqp091-go"
 )
@@ -11,8 +11,14 @@ var connection *amqp091.Connection
 var channel *amqp091.Channel
 
 func InitRabbitMQ() error {
+	rabbitURI := os.Getenv("RABBITMQ_URI") //"amqp://user:password@rabbitmq:5672/"
+
+	// Test
+	uri := os.Getenv("RABBITMQ_URI")
+	log.Printf("RabbitMQ URI in InitRabbitMQ: %s", uri)
+
 	var err error
-	connection, err = amqp091.Dial("amqp://guest:guest@localhost:5672/") //"amqp://user:password@rabbitmq:5672/"
+	connection, err = amqp091.Dial(rabbitURI)
 	if err != nil {
 		log.Printf("Failed to connect to RabbitMQ: %v", err)
 		return err
@@ -50,4 +56,22 @@ func CloseRabbitMQ() {
 	if connection != nil {
 		connection.Close()
 	}
+}
+
+// This is use for the integration test
+func ConsumeQueue(queueName string) (<-chan amqp091.Delivery, error) {
+	msgs, err := channel.Consume(
+		queueName, // queue
+		"",        // consumer
+		true,      // auto-ack
+		false,     // exclusive
+		false,     // no-local
+		false,     // no-wait
+		nil,       // args
+	)
+	if err != nil {
+		log.Printf("Failed to consume RabbitMQ queue: %v", err)
+		return nil, err
+	}
+	return msgs, nil
 }
