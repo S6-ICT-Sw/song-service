@@ -93,7 +93,13 @@ func StartLocalServer() {
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
-	defer client.Disconnect(context.Background())
+	//defer client.Disconnect(context.Background())
+
+	defer func() {
+		if err := client.Disconnect(context.Background()); err != nil {
+			log.Printf("Error disconnecting from MongoDB: %v", err)
+		}
+	}()
 
 	// Initialize repository
 	//repository.InitRepository(client, "songDB", "songs")

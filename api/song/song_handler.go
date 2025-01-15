@@ -4,10 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"bytes"
-	"fmt"
-	"io"
-
 	"log"
 
 	"github.com/TonyJ3/song-service/models"
@@ -119,37 +115,6 @@ func CreateSong(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
-}
-
-// Helper function to notify the song suggestion service
-func notifySongSuggestionService(song models.Song) error {
-	// Prepare the payload for the song suggestion service
-	payload := map[string]string{
-		"song_id": song.ID.Hex(), // Convert ObjectID to string
-		"title":   song.Title,
-		"artist":  song.Artist,
-	}
-
-	// Convert the payload to JSON
-	jsonPayload, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-
-	// Make an HTTP POST request to the song suggestion service
-	resp, err := http.Post("http://localhost:8081/suggestions", "application/json", bytes.NewBuffer(jsonPayload))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Check the response status code
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("song suggestion service returned status %d: %s", resp.StatusCode, string(body))
-	}
-
-	return nil
 }
 
 func UpdateSong(w http.ResponseWriter, r *http.Request) {

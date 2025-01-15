@@ -393,33 +393,6 @@ func startRabbitContainer(ctx context.Context) (testcontainers.Container, string
 	return rabbitC, rabbitURI, nil
 }
 
-func mockConsume(queueName string) (<-chan amqp.Delivery, func(), error) {
-	mockMessages := make(chan amqp.Delivery)
-
-	// Simulate a message being published after a delay
-	go func() {
-		defer func() {
-			// Close the channel once the message is published
-			close(mockMessages)
-		}()
-
-		// Simulate a message that would be received from RabbitMQ
-		messageBody := map[string]string{
-			"title":  "Integration Test Song",
-			"artist": "Test Artist",
-			"genre":  "Pop",
-		}
-		body, _ := json.Marshal(messageBody)
-
-		mockMessages <- amqp.Delivery{
-			Body: body,
-		}
-	}()
-
-	// No need for a separate cleanup closure since the channel will be closed inside the goroutine itself
-	return mockMessages, func() {}, nil
-}
-
 func TestCreateSongPublishIntegration(t *testing.T) {
 	ctx := context.Background()
 
@@ -454,12 +427,25 @@ func TestCreateSongPublishIntegration(t *testing.T) {
 		t.Fatalf("RabbitMQ initialization failed: %v", rabbitErr)
 	}
 
-	defer func() {
+	/*defer func() {
 		if mongoC != nil {
 			mongoC.Terminate(ctx)
 		}
 		if rabbitC != nil {
 			rabbitC.Terminate(ctx)
+		}
+	}()*/
+
+	defer func() {
+		if mongoC != nil {
+			if err := mongoC.Terminate(ctx); err != nil {
+				t.Logf("Failed to terminate MongoDB container: %v", err)
+			}
+			if rabbitC != nil {
+				if err := rabbitC.Terminate(ctx); err != nil {
+					t.Logf("Failed to terminate RabbitMQ container: %v", err)
+				}
+			}
 		}
 	}()
 
@@ -472,11 +458,21 @@ func TestCreateSongPublishIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
-	defer client.Disconnect(ctx)
+	//defer client.Disconnect(ctx)
+	defer func() {
+		if err := client.Disconnect(ctx); err != nil {
+			t.Logf("Failed to disconnect MongoDB client: %v", err)
+		}
+	}()
 
 	// Initialize MongoDB collection
 	collection := client.Database(dbName).Collection(collectionName)
-	defer collection.Drop(ctx) // Clean up after the test
+	//defer collection.Drop(ctx) // Clean up after the test
+	defer func() {
+		if err := collection.Drop(ctx); err != nil {
+			t.Logf("Failed to drop MongoDB collection: %v", err)
+		}
+	}()
 
 	// Ensure MongoDB is ready to accept queries
 	err = client.Ping(ctx, nil)
