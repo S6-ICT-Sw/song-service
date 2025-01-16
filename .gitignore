@@ -42,3 +42,25 @@ go.work.sum
 # Ignore all local history of files
 .history
 .ionide
+
+# Node.js dependencies
+node_modules/
+
+# Cypress artifacts
+cypress/screenshots/
+cypress/videos/
+
+# Cypress config backups
+cypress.json.backup
+
+# Log files
+*.log
+
+# Temporary files
+cypress/fixtures/temp*.json
+cypress/e2e/debug_*.js
+
+# Environment variables
+.env
+.env.local
+

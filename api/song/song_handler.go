@@ -82,13 +82,6 @@ func CreateSong(w http.ResponseWriter, r *http.Request) {
 	//log.Printf("Successfully created song: %+v", createdSong)
 	//json.NewEncoder(w).Encode(createdSong)
 
-	// Notify the song suggestion service
-	/*err = notifySongSuggestionService(createdSong)
-	if err != nil {
-		http.Error(w, "Failed to notify song suggestion service: "+err.Error(), http.StatusInternalServerError)
-		return
-	}*/
-
 	// Publish the event to RabbitMQ
 	// Initialize RabbitMQ connection and channel
 	err = messaging.InitRabbitMQ()

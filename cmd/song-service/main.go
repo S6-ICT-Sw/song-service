@@ -17,6 +17,7 @@ import (
 	"github.com/TonyJ3/song-service/repository"
 	"github.com/TonyJ3/song-service/services"
 
+	"github.com/gorilla/handlers"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -84,9 +85,6 @@ func StartLocalServer() {
 		log.Fatal("MONGO_URI environment variable is not set")
 	}
 
-	//Test
-	log.Printf("Using MongoDB URI: %s", os.Getenv("MONGO_URI"))
-
 	// MongoDB connection
 	// "mongodb+srv://song-snippets-admin:DQv4P9LXNBQ2xsdb@songsnippets.ci2mt.mongodb.net/?retryWrites=true&w=majority&appName=SongSnippets"
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(dbURI))
@@ -102,17 +100,18 @@ func StartLocalServer() {
 	}()
 
 	// Initialize repository
-	//repository.InitRepository(client, "songDB", "songs")
-	//repository.InitRepository(client.Database("songDB").Collection("songs"))
 	repo := repository.NewMongoSongRepository(client.Database("songDB").Collection("songs"))
 	services.SetRepository(repo)
 
-	//svc := services.NewSongService(repo)
-	//h := song.NewSongHandler(svc)
-	//r := api.NewRouter(h)
-
 	// Setup the router (mux)
 	router := api.SetupRouter()
+
+	// Add CORS support
+	cors := handlers.CORS(
+		handlers.AllowedOrigins([]string{"*"}), // Allow all origins (or specify your frontend's origin)
+		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+	)
 
 	// Notifaction that the system is running
 	fmt.Println("Localhost:8080 is running")
@@ -127,7 +126,7 @@ func StartLocalServer() {
 	// Create a custom HTTP server
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: router,
+		Handler: cors(router),
 	}
 
 	// Graceful shutdown handling
