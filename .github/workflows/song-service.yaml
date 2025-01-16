@@ -114,15 +114,22 @@ jobs:
       run: npm install
 
     - name: Start application
-      run: go run ./cmd/song-service &
-      env:
-        PORT: 8080
+      run: nohup go run ./cmd/song-service &
 
     - name: Wait for application to start
-      run: npx wait-on http://localhost:8080
+      run: sleep 10
 
     - name: Run Cypress tests
       run: npx cypress run
+
+    - name: Stop background application
+      run: |
+        pid=$(pgrep -f "go run ./cmd/song-service")
+        if [ -n "$pid" ]; then
+          kill $pid
+        else
+          echo "No application process found"
+        fi
 
   lint:
     runs-on: ubuntu-latest
