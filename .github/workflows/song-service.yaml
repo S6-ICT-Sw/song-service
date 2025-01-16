@@ -121,11 +121,11 @@ jobs:
     - name: Wait for application to start
       run: sleep 30
 
-    - name: Verify application is running
-      run: curl -v http://localhost:8080
-
     - name: Print application logs
       run: cat app.log
+
+    - name: Verify application is running
+      run: curl -v http://localhost:8080
 
     - name: Run Cypress tests
       run: npx cypress run --browser chrome --headless
