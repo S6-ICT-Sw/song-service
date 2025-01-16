@@ -128,7 +128,7 @@ jobs:
     - name: Start application
       env:
         RABBITMQ_URI: amqp://guest:guest@localhost:5672/
-        MONGO_URI: mongodb+srv://song-snippets-admin:DQv4P9LXNBQ2xsdb@songsnippets.ci2mt.mongodb.net/?retryWrites=true&w=majority&appName=SongSnippets
+        MONGO_URI: ${{ secrets.MONGO_URI }}
       run: nohup go run ./cmd/song-service &
 
     - name: Wait for application to start
