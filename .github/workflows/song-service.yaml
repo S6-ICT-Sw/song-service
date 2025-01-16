@@ -101,6 +101,18 @@ jobs:
 
   end-2-end-test:
     runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:5.0
+        ports:
+          - 27017:27017
+      rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+          - 5672:5672
+          - 15672:15672
+    
     steps:
     - name: Check out the code
       uses: actions/checkout@v4
@@ -114,9 +126,10 @@ jobs:
       run: npm install
 
     - name: Start application
-      run: nohup go run ./cmd/song-service > app.log 2>&1 &
       env:
-        PORT: 8080
+        RABBITMQ_URI: amqp://guest:guest@localhost:5672/
+        MONGO_URI: mongodb+srv://song-snippets-admin:DQv4P9LXNBQ2xsdb@songsnippets.ci2mt.mongodb.net/?retryWrites=true&w=majority&appName=SongSnippets
+      run: nohup go run ./cmd/song-service > app.log 2>&1 &
 
     - name: Wait for application to start
       run: sleep 30
