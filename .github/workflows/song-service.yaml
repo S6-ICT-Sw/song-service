@@ -114,15 +114,21 @@ jobs:
       run: npm install
 
     - name: Start application
-      run: nohup go run ./cmd/song-service &
+      run: nohup go run ./cmd/song-service > app.log 2>&1 &
       env:
         PORT: 8080
 
     - name: Wait for application to start
-      run: sleep 10
+      run: sleep 30
+
+    - name: Verify application is running
+      run: curl -v http://localhost:8080
+
+    - name: Print application logs
+      run: cat app.log
 
     - name: Run Cypress tests
-      run: npx cypress run
+      run: npx cypress run --browser chrome --headless
 
     - name: Stop background application
       run: |
