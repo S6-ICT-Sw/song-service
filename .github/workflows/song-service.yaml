@@ -115,6 +115,8 @@ jobs:
 
     - name: Start application
       run: nohup go run ./cmd/song-service &
+      env:
+        PORT: 8080
 
     - name: Wait for application to start
       run: sleep 10
