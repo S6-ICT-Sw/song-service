@@ -83,7 +83,6 @@ jobs:
     - name: Run integration tests
       env:
         RABBITMQ_URI: amqp://guest:guest@localhost:5672/
-        MONGO_URI: mongodb://localhost:27017/testDB
       run: go test -timeout 300s -run ^TestCreateSongPublishIntegration$ github.com/TonyJ3/song-service/integration_test
 
     - name: Stop background application
@@ -99,10 +98,6 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mongo:
-        image: mongo:5.0
-        ports:
-          - 27017:27017
       rabbitmq:
         image: rabbitmq:3-management
         ports:
