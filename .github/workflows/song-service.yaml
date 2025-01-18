@@ -234,7 +234,7 @@ jobs:
           export GOOS=linux
           export GOARCH=arm64
           export CGO_ENABLED=0
-          go build -o bootstrap main.go
+          go build -o bootstrap ./cmd/song-service/main.go
           zip lambda-handler.zip bootstrap
 
    - name: Deploy to AWS Lambda
