@@ -235,7 +235,7 @@ jobs:
        zip lambda-handler.zip bootstrap
 
    - name: Deploy to AWS Lambda
-     run: aws lambda update-function-code --function-name test-function --zip-file fileb://lambda-handler.zip
+     run: aws lambda update-function-code --function-name test-function --zip-file fileb://lambda-handler.zip --runtime provided.al2023
 
     
       
