@@ -4,18 +4,22 @@ import (
 	"log"
 	"os"
 
+	//"sync"
+
 	"github.com/rabbitmq/amqp091-go"
 )
 
 var connection *amqp091.Connection
 var channel *amqp091.Channel
+var rabbitMQEnabled bool
 
 func InitRabbitMQ() error {
-	rabbitURI := os.Getenv("RABBITMQ_URI") //"amqp://user:password@rabbitmq:5672/"
-
-	// Test
-	uri := os.Getenv("RABBITMQ_URI")
-	log.Printf("RabbitMQ URI in InitRabbitMQ: %s", uri)
+	rabbitURI := os.Getenv("RABBITMQ_URI") //"amqp://user:password@rabbitmq:5672/" amqp://guest:guest@localhost:5672/
+	if rabbitURI == "" {
+		log.Println("RABBITMQ_URI not set. RabbitMQ is disabled.")
+		rabbitMQEnabled = false
+		return nil
+	}
 
 	var err error
 	connection, err = amqp091.Dial(rabbitURI)
@@ -27,6 +31,7 @@ func InitRabbitMQ() error {
 	channel, err = connection.Channel()
 	if err != nil {
 		log.Printf("Failed to open a channel: %v", err)
+		rabbitMQEnabled = false
 		return err
 	}
 
@@ -41,9 +46,14 @@ func InitRabbitMQ() error {
 	)
 	if err != nil {
 		log.Printf("Failed to declare a queue: %v", err)
+		rabbitMQEnabled = false
 		return err
 	}
 
+	// Set the global channel variable
+	//channelLock.Lock()
+	//channelLock.Unlock()
+	rabbitMQEnabled = true
 	log.Println("RabbitMQ connection and channel initialized")
 	return nil
 }
@@ -59,7 +69,14 @@ func CloseRabbitMQ() {
 }
 
 func GetChannel() *amqp091.Channel {
+	//channelLock.Lock()
+	//defer channelLock.Unlock()
 	return channel
+}
+
+func IsRabbitMQEnabled() bool {
+	//return channel != nil
+	return rabbitMQEnabled
 }
 
 // This is use for the integration test

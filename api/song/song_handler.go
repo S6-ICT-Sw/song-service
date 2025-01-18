@@ -52,8 +52,6 @@ func GetSongByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateSong(w http.ResponseWriter, r *http.Request) {
-	//log.Println("Received request to create a song")
-
 	var newSong models.Song
 
 	// Create a new JSON decoder and disallow unknown fields
@@ -65,7 +63,6 @@ func CreateSong(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid JSON format or extra fields", http.StatusBadRequest)
 		return
 	}
-	//log.Printf("Parsed song from request: %+v", newSong)
 
 	// Validate required fields
 	if newSong.Title == "" || newSong.Artist == "" || newSong.Genre == "" {
@@ -73,18 +70,38 @@ func CreateSong(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdSong, err := services.CreateSong(newSong) //services.CreateSong(newSong)
+	createdSong, err := services.CreateSong(newSong)
 	if err != nil {
 		log.Printf("Failed to create song: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	//log.Printf("Successfully created song: %+v", createdSong)
 	//json.NewEncoder(w).Encode(createdSong)
+
+	// Try to publish the event to RabbitMQ
+	if messaging.IsRabbitMQEnabled() {
+		err = messaging.PublishMessage(
+			messaging.GetChannel(),
+			"created",            // eventType: "created" for a new song
+			createdSong.ID.Hex(), // song_ID: the ID of the created song
+			createdSong.Title,    // title: the song's title
+			createdSong.Artist,   // artist: the song's artist
+		)
+		if err != nil {
+			log.Printf("Failed to publish song creation event: %v", err)
+			// Log the failure but do not return an error to the client
+		} else {
+			log.Println("Successfully published song creation event to RabbitMQ")
+		}
+	} else {
+		// Mock behavior for when RabbitMQ is not enabled
+		log.Printf("Mock Publish: Created event for song ID=%s, Title=%s, Artist=%s",
+			createdSong.ID.Hex(), createdSong.Title, createdSong.Artist)
+	}
 
 	// Publish the event to RabbitMQ
 	// Initialize RabbitMQ connection and channel
-	err = messaging.InitRabbitMQ()
+	/*err = messaging.InitRabbitMQ()
 	if err != nil {
 		http.Error(w, "Failed to connect to RabbitMQ", http.StatusInternalServerError)
 		return
@@ -102,7 +119,7 @@ func CreateSong(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Failed to publish song creation event", http.StatusInternalServerError)
 		return
-	}
+	}*/
 
 	if err := json.NewEncoder(w).Encode(createdSong); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)

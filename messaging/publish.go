@@ -2,7 +2,7 @@ package messaging
 
 import (
 	"encoding/json"
-	"fmt"
+	//"fmt"
 	"log"
 
 	"github.com/rabbitmq/amqp091-go"
@@ -17,8 +17,20 @@ type Message struct {
 
 func PublishMessage(channel *amqp091.Channel, eventType, song_ID, title, artist string) error {
 	if channel == nil {
-		log.Println("RabbitMQ channel is not initialized")
-		return fmt.Errorf("RabbitMQ channel is nil")
+		log.Println("RabbitMQ channel is not initialized. Skipping message publishing.")
+		//return fmt.Errorf("RabbitMQ channel is nil")
+		// Mock the message when not connecting with RabbitMQ
+		mockMessage := Message{
+			Event:   eventType,
+			Song_ID: song_ID,
+		}
+		if eventType == "created" {
+			mockMessage.Title = title
+			mockMessage.Artist = artist
+		}
+		body, _ := json.Marshal(mockMessage)
+		log.Printf("Mock Publish Message: %s", string(body))
+		return nil
 	}
 
 	// Construct the message with a struct to ensure field order
@@ -38,9 +50,6 @@ func PublishMessage(channel *amqp091.Channel, eventType, song_ID, title, artist 
 		log.Printf("Failed to marshal message: %v", err)
 		return err
 	}
-
-	// Log the message before publishing
-	log.Printf("Publishing message to RabbitMQ: %s", string(body))
 
 	err = channel.Publish(
 		"",            // exchange
