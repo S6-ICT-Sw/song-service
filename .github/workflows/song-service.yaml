@@ -235,10 +235,10 @@ jobs:
           export GOARCH=arm64
           export CGO_ENABLED=0
           go build -o bootstrap ./cmd/song-service/main.go
-          zip lambda-handler.zip bootstrap
+          zip create-song.zip bootstrap
 
    - name: Deploy to AWS Lambda
-     run: aws lambda update-function-code --function-name test-function --zip-file fileb://lambda-handler.zip
+     run: aws lambda update-function-code --function-name CreateSong --zip-file fileb://create-song.zip
 
     
       
