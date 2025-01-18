@@ -215,7 +215,7 @@ jobs:
         docker build -t tonyj3/song-snippets-song-service:latest .
         docker push tonyj3/song-snippets-song-service:latest
 
-  deploy:
+  deploy-create-function:
    runs-on: ubuntu-latest
    needs: docker
    steps:
