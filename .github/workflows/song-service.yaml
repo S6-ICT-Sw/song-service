@@ -231,11 +231,11 @@ jobs:
 
    - name: Build Lambda Function
      run: |
-       GOOS=linux GOARCH=amd64 go build -o bootstrap ./cmd/song-service
+       GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bootstrap ./cmd/song-service
        zip lambda-handler.zip bootstrap
 
    - name: Deploy to AWS Lambda
-     run: aws lambda update-function-code --function-name test-function --zip-file fileb://lambda-handler.zip --runtime provided.al2023
+     run: aws lambda update-function-code --function-name test-function --zip-file fileb://lambda-handler.zip
 
     
       
