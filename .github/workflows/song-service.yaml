@@ -1,0 +1,244 @@
+name: Song service
+
+on:
+  push:
+    branches:
+      - development
+  pull_request:
+    branches:
+    - development
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    # Check out the code
+    - name: Check out the code
+      uses: actions/checkout@v4
+
+    # Setup Go
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23.1' # Specify your Go version
+
+    # Cache Go modules
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+              ~/.cache/go-build
+              ${{ runner.tool_cache }}/go
+        key: go-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    # Install dependencies
+    - name: Install dependencies
+      run: go mod download
+
+    - name: Build the application
+      run: go build -v ./cmd/song-service/
+      
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v4
+
+    - name: Run Unit Tests
+      run: go test ./tests
+
+  integration-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+          - 5672:5672
+          - 15672:15672
+    
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23.1'
+
+    - name: Install dependencies
+      run: go mod download
+
+    - name: Start application in the background
+      env:
+        RABBITMQ_URI: amqp://guest:guest@localhost:5672/
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        LOCAL: true
+      run: nohup go run ./cmd/song-service &
+
+    - name: Wait for application to start
+      run: sleep 10
+
+    - name: Run integration tests
+      env:
+        RABBITMQ_URI: amqp://guest:guest@localhost:5672/
+      run: go test -timeout 300s -run ^TestCreateSongPublishIntegration$ github.com/TonyJ3/song-service/integration_test
+
+    - name: Stop background application
+      run: |
+        pid=$(pgrep -f "go run ./cmd/song-service")
+        if [ -n "$pid" ]; then
+          kill $pid
+        else
+          echo "No application process found"
+        fi
+
+  end-2-end-test:
+    runs-on: ubuntu-latest
+
+    services:
+      rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+          - 5672:5672
+          - 15672:15672
+    
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Start application
+      env:
+        RABBITMQ_URI: amqp://guest:guest@localhost:5672/
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        LOCAL: true
+      run: nohup go run ./cmd/song-service &
+
+    - name: Wait for application to start
+      run: sleep 10
+
+    - name: Run Cypress tests
+      run: npx cypress run --browser chrome --headless
+
+    - name: Stop background application
+      run: |
+        pid=$(pgrep -f "go run ./cmd/song-service")
+        if [ -n "$pid" ]; then
+          kill $pid
+        else
+          echo "No application process found"
+        fi
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23.1'
+
+    - name: Run GolangCI-Lint
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
+        golangci-lint run ./...
+
+  snyk:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23.1'
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+              ~/.cache/go-build
+              ${{ runner.tool_cache }}/go
+        key: go-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+          
+    # Install dependencies
+    - name: Install dependencies
+      run: go mod download
+
+    - name: Install Snyk
+      run: npm install -g snyk
+
+    # Run Snyk test with severity threshold
+    - name: Run Snyk test
+      run: snyk test --severity-threshold=medium --json
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+    - name: Monitor the project with Snyk
+      run: snyk monitor
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [build, test, integration-test, end-2-end-test, lint, snyk]
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t tonyj3/song-snippets-song-service:latest .
+        docker push tonyj3/song-snippets-song-service:latest
+
+  deploy-create-function:
+   runs-on: ubuntu-latest
+   needs: docker
+   steps:
+   - name: Check out the code
+     uses: actions/checkout@v4
+
+   - name: Configure AWS CLI
+     uses: aws-actions/configure-aws-credentials@v3
+     with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-central-1
+
+   - name: Build Lambda Function
+     run: |
+          export GOOS=linux
+          export GOARCH=arm64
+          export CGO_ENABLED=0
+          go build -o bootstrap ./cmd/song-service/main.go
+          zip create-song.zip bootstrap
+
+   - name: Deploy to AWS Lambda
+     run: aws lambda update-function-code --function-name CreateSong --zip-file fileb://create-song.zip
+
+    
+      

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create a New Song</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    form {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .message {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      display: none;
+    }
+    .success {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Create a New Song</h1>
+
+  <form id="createSongForm">
+    <input type="text" id="title" placeholder="Song Title" required>
+    <input type="text" id="artist" placeholder="Artist" required>
+    <input type="text" id="genre" placeholder="Genre" required>
+    <button type="submit">Create Song</button>
+  </form>
+
+  <div id="responseMessage" class="message"></div>
+
+  <script>
+    document.getElementById('createSongForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      const title = document.getElementById('title').value;
+      const artist = document.getElementById('artist').value;
+      const genre = document.getElementById('genre').value;
+
+      const newSong = {
+        title,
+        artist,
+        genre
+      };
+
+      try {
+        const response = await fetch('http://localhost:8080/songs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(newSong)
+        });
+
+        const responseMessage = document.getElementById('responseMessage');
+        
+        if (response.ok) {
+          const createdSong = await response.json();
+          responseMessage.textContent = `Song created successfully: ${createdSong.title} by ${createdSong.artist}`;
+          responseMessage.className = 'message success';
+        } else {
+          const errorMessage = await response.text();
+          responseMessage.textContent = `Error: ${errorMessage}`;
+          responseMessage.className = 'message error';
+        }
+      } catch (error) {
+        const responseMessage = document.getElementById('responseMessage');
+        responseMessage.textContent = `Error: ${error.message}`;
+        responseMessage.className = 'message error';
+      }
+
+      // Show the message div
+      document.getElementById('responseMessage').style.display = 'block';
+    });
+  </script>
+
+</body>
+</html>

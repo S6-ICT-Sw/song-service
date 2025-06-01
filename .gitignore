@@ -23,3 +23,44 @@ go.work.sum
 
 # env file
 .env
+
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
+# Node.js dependencies
+node_modules/
+
+# Cypress artifacts
+cypress/screenshots/
+cypress/videos/
+
+# Cypress config backups
+cypress.json.backup
+
+# Log files
+*.log
+
+# Temporary files
+cypress/fixtures/temp*.json
+cypress/e2e/debug_*.js
+
+# Environment variables
+.env
+.env.local
+
